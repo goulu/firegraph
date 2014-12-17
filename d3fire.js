@@ -14,7 +14,7 @@ if (!(Firebase && typeof(Firebase) == 'function')) {
  * 		keyFunc : function(dataSnapshot)
  * 			A function that takes a firebase snapshot and returns a key. In most
  * 			cases this will be a unique identifier of the object within the firebase.
- * 			Defaults to returning dataSnapshot.name(). 
+ * 			Defaults to returning dataSnapshot.key(). 
  * 
  *  	createFunc : function(dataSnapshot) 
  *  		A callback when a new object is created in the firebase. This function
@@ -52,7 +52,7 @@ d3.selection.prototype.firebase = function(fbase, opts) {
 		var keyFunc = opts.keyFunc;
 	} else {
 		var keyFunc = function(data) {
-			return data.name();
+			return data.key();
 		}
 	}
 	

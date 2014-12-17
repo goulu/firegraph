@@ -1,0 +1,13 @@
+.node {
+  fill: white;
+  stroke: black;
+  pointer-events: all;
+}
+
+text { 
+  /* text in .node : revert fill and stroke otherwise they're inherited from .node */
+  fill: black;
+  stroke: none;
+  font: x-small sans-serif;
+  pointer-events: none;
+}
