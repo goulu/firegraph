@@ -28,7 +28,7 @@ function mousedown() {
 		});
 
 		if (select != null) {
-			// add a link
+			newnode.push({'edge':{1:{'source':newnode.key(),'target':newnode.key()}}});
 		}
 
 		select = newnode;
@@ -37,52 +37,6 @@ function mousedown() {
 
 width = parseInt(svg.style('width'), 10);
 height = parseInt(svg.style('height'), 10);
-
-var packer = d3.layout.force()
-	.size([ width, height ])
-	.charge(-1000) //repulsion
-	.theta(0.5) // damping
-	.linkDistance(w + h);
-
-function layoutGraph() {
-	var nodes = svg.selectAll(".node")[0],
-		links = svg.selectAll(".link")[0];
-
-	packer
-		.nodes(nodes)
-		.links(links)
-		.start();
-
-	function path(d) {
-		var x1 = d.source.x, y1 = d.source.y, x2 = d.target.x, y2 = d.target.y, dx = x2
-				- x1, dy = y2 - y1, a = Math.abs(dy) / Math.abs(dx);
-
-		if (a > h / w) {
-			y1 = y1 + sign(dy) * h / 2;
-			y2 = y2 - sign(dy) * h / 2;
-		} else {
-			x1 = x1 + sign(dx) * w / 2;
-			x2 = x2 - sign(dx) * w / 2;
-		}
-
-		return "M" + x1 + "," + y1 + "L" + x2 + "," + y2;
-	}
-
-	packer.on("tick", function(d) {
-		// bounding box effect :
-		// http://mbostock.github.io/d3/talk/20110921/bounding.html
-        packer.nodes().forEach(function(d) {
-            d3.select(d)
-            	.attr("cx", d.x = Math.max(w / 2, Math.min(width - w / 2, d.x)))
-	    		.attr("cy", d.y = Math.max(h / 2, Math.min(height - h / 2, d.y)))
-	    		.attr("transform", "translate(" + d.x + "," + d.y + ")");
-        });
-        packer.links().forEach(function(node) {
-        	d3.select(link).attr("d", path);
-        });
-	});
-
-}
 
 function createNode(data) {
 	var val=data.val(),
@@ -105,9 +59,45 @@ function createNode(data) {
 		.attr("text-anchor", "middle")
 		.attr("dominant-baseline","central")
 		.text(val.label);
-
+	
+	edges=data.child('edge');
+	edges.forEach(function(edge) {createEdge(g,edge);})
 	return g;
 };
+
+/* edges are defined below */
+
+svg.append("defs").selectAll("marker").data([ "arrow" ]).enter()
+.append("marker")
+	.attr("id", function(d) {return d;})
+	.attr("viewBox", "0 -5 10 10")
+	.attr("refX", 15).attr("refY", -1.5)
+	.attr("markerWidth", 6).attr("markerHeight", 6)
+	.attr("orient", "auto")
+.append("path")
+	.attr("d", "M0,-5L10,0L0,5");
+
+var div = d3.select("body").append("div") // declare the tooltip div
+.attr("class", "tooltip") // apply the 'tooltip' class
+.style("opacity", 0); // set the opacity to nil
+
+function path(d) {
+	var x1 = d.source.x, y1 = d.source.y, x2 = d.target.x, y2 = d.target.y, dx = x2
+			- x1, dy = y2 - y1, a = Math.abs(dy) / Math.abs(dx);
+
+	if (a > h / w) {
+		y1 = y1 + sign(dy) * h / 2;
+		y2 = y2 - sign(dy) * h / 2;
+	} else {
+		x1 = x1 + sign(dx) * w / 2;
+		x2 = x2 - sign(dx) * w / 2;
+	}
+	return "M" + x1 + "," + y1 + "L" + x2 + "," + y2;
+}
+
+function createEdge(g,data){
+	g.append("path").attr("class", "link").attr("marker-end","url(#arrow)");
+}
 
 var fbase = new Firebase(
 		'https://brilliant-heat-1116.firebaseio.com/Graph/test');
@@ -137,38 +127,34 @@ svg.firebase(fbase, {
 	}
 });
 
-function updateGraph() {
-	node = node.data(nodes);
-	g = node.enter().append("g").call(force.drag).attr("class", "node").attr(
-			"id", function(d) {
-				return "n" + d.id;
-			});
-	g.append("rect").attr("class", function(d) {
-		return d.type;
-	}).attr("x", -w / 2).attr("y", -h / 2).attr("width", w).attr("height", h)
-			.attr("title", function(d) {
-				return d.text;
-			});
-	g.append("text").attr("text-anchor", "middle").attr("dominant-baseline",
-			"central").text(function(d) {
-		return d.label;
+var packer = d3.layout.force()
+	.size([ width, height ])
+	.charge(-1000) //repulsion
+	.theta(0.5) // damping
+	.linkDistance(w + h);
+
+function layoutGraph() {
+	var nodes = svg.selectAll(".node")[0],
+		links = svg.selectAll(".link")[0];
+	
+	packer
+		.nodes(nodes)
+		.links(links)
+		.start();
+	
+	packer.on("tick", function(d) {
+		// bounding box effect :
+		// http://mbostock.github.io/d3/talk/20110921/bounding.html
+	    packer.nodes().forEach(function(d) {
+	        d3.select(d)
+	        	.attr("cx", d.x = Math.max(w / 2, Math.min(width - w / 2, d.x)))
+	    		.attr("cy", d.y = Math.max(h / 2, Math.min(height - h / 2, d.y)))
+	    		.attr("transform", "translate(" + d.x + "," + d.y + ")");
+	    });
+	    packer.links().forEach(function(node) {
+	    	d3.select(link).attr("d", path);
+	    });
 	});
 
-	link = link.data(links);
-	link.enter().append("path").attr("class", "link").attr("marker-end",
-			"url(#arrow)");
-
 }
-
-svg.append("defs").selectAll("marker").data([ "arrow" ]) // types. we use
-// only one
-.enter().append("marker").attr("id", function(d) {
-	return d;
-}).attr("viewBox", "0 -5 10 10").attr("refX", 15).attr("refY", -1.5).attr(
-		"markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto")
-		.append("path").attr("d", "M0,-5L10,0L0,5");
-
-var div = d3.select("body").append("div") // declare the tooltip div
-.attr("class", "tooltip") // apply the 'tooltip' class
-.style("opacity", 0); // set the opacity to nil
 
