@@ -1,4 +1,12 @@
 /*
+ * Collaborative graph editor using D3.js and Firebase
+ * https://github.com/goulu/firegraph
+ * 
+ * code borrowed from:
+ * - http://bl.ocks.org/mbostock/1153292
+ * - http://bl.ocks.org/mbostock/929623
+ * - https://github.com/mattdodge/D3Fire/blob/master/test/realTimeWordCloud.html
+ * 
  * the general logic is the following : 
  * 1) interactive actions are pushed in firebase 
  * 2) changes in firebase are caught by d3fire callback functions
@@ -120,7 +128,6 @@ function createEdge(data){
 		.attr("class", "link")
 		.attr("id", id)
 		.attr("marker-end","url(#arrow)");
-	// link.data={source:val.source, target:val.target} // how to link the source/target data to the svg path ???
 	return link;
 }
 
@@ -168,16 +175,16 @@ function updateGraph() {
 		.nodes(nodes)
 		.links(links)
 		.on("tick", function(d) {
-			// bounding box effect :
-			// http://mbostock.github.io/d3/talk/20110921/bounding.html
 		    packer.nodes().forEach(function(d) {
 		        d3.select(d)
+		        	// bounding box effect :
+		        	// http://mbostock.github.io/d3/talk/20110921/bounding.html
 		        	.attr("cx", d.x = Math.max(w / 2, Math.min(width - w / 2, d.x)))
 		    		.attr("cy", d.y = Math.max(h / 2, Math.min(height - h / 2, d.y)))
 		    		.attr("transform", "translate(" + d.x + "," + d.y + ")");
 			    });
-		    packer.links().forEach(function(node) {
-		    	d3.select(link)
+		    packer.links().forEach(function(d) {
+		    	d3.select(d)
 		    		.attr("d", path);
 		    });
 		})
