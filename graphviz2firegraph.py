@@ -5,7 +5,7 @@ populate firebase from GraphViz .dot/.gv file(s)
 """
 __author__ = "Philippe Guglielmetti"
 __copyright__ = "Copyright 2015, Philippe Guglielmetti"
-__license__ = "LGPL"
+__license__ = "GPL"
 
 import os.path, logging
 
@@ -16,6 +16,9 @@ DSN = 'https://brilliant-heat-1116.firebaseio.com/Graph/'
 
 EMAIL = 'yourfirebase@email.here'
 SECRET = 'YourFirebaseSecretHere' #DO NOT PUBLISH !!!
+
+EMAIL = 'firebase@goulu.net'
+SECRET = 'CkeTojo1yhMqJ4k1adDTfhz0tIJrMWOLVfhlqkXw' #DO NOT PUBLISH !!!
 
 authentication = firebase.FirebaseAuthentication(SECRET,EMAIL, True, True)
     
@@ -41,22 +44,20 @@ def graphviz_to_firebase(dirname,filename):
         attrs.update(agraph.node_attr)
         attrs['label']=node #default label is node id
         attrs.update(node.attr)
-        key='%s/%d'%(graph,i)
+        key='%s/node/%d'%(graph,i)
         ref.patch(key,attrs)
         print('.'),
-    for j,edge in enumerate(agraph.iteredges()):
+    for i,edge in enumerate(agraph.iteredges()):
         attrs={}
         attrs.update(agraph.edge_attr)
         attrs.update(edge.attr)
         attrs['source']=nodes[edge[0]]
-        i=nodes[edge[1]]
-        attrs['target']=i
+        attrs['target']=nodes[edge[1]]
         #edges are added as attributes of their destination node
-        key='%s/%d/edge/%d'%(graph,i,j)
+        key='%s/edge/%d'%(graph,i)
         ref.patch(key,attrs)
         print('-'),
     logging.info('ok')
-    
     
 def step(extensions, dirname, names):
     for name in names:
