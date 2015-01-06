@@ -2,6 +2,8 @@
  * the general logic is the following : 
  * 1) interactive actions are pushed in firebase 
  * 2) changes in firebase are caught by d3fire callback functions
+ *    which create/update/delete svg nodes+edges
+ * 3) d3 force graph layout is restarted at each change
  */
 
 var fbase = new Firebase('https://brilliant-heat-1116.firebaseio.com/Graph')
@@ -92,7 +94,7 @@ svg.firebase(fedge, {
 	
 	createFunc : function(data) {
 		console.log('edge createFunc', data.key(), data.val());
-		e=createEdge(data);
+		var e=createEdge(data);
 		updateGraph();
 		return e;
 	},
@@ -110,6 +112,18 @@ svg.firebase(fedge, {
 	}
 });
 
+function createEdge(data){
+	var val=data.val(),
+		id=data.key();
+
+	link=svg.append("path")
+		.attr("class", "link")
+		.attr("id", id)
+		.attr("marker-end","url(#arrow)");
+	// link.data={source:val.source, target:val.target} // how to link the source/target data to the svg path ???
+	return link;
+}
+
 svg.append("defs").selectAll("marker").data([ "arrow" ]).enter()
 .append("marker")
 	.attr("id", function(d) {return d;})
@@ -119,10 +133,6 @@ svg.append("defs").selectAll("marker").data([ "arrow" ]).enter()
 	.attr("orient", "auto")
 .append("path")
 	.attr("d", "M0,-5L10,0L0,5");
-
-var div = d3.select("body").append("div") // declare the tooltip div
-.attr("class", "tooltip") // apply the 'tooltip' class
-.style("opacity", 0); // set the opacity to nil
 
 function path(d) {
 	var x1 = d.source.x, 
@@ -143,14 +153,6 @@ function path(d) {
 	return "M" + x1 + "," + y1 + "L" + x2 + "," + y2;
 }
 
-function createEdge(data){
-	var e = svg.append("path")
-		.attr("class", "link")
-		.attr("marker-end","url(#arrow)");
-	
-	return e;
-}
-
 var packer = d3.layout.force()
 	.size([ width, height ])
 	.charge(-1000) //repulsion
@@ -159,8 +161,8 @@ var packer = d3.layout.force()
 
 function updateGraph() {
 
-	var nodes = svg.selectAll(".node")[0],
-		links = svg.selectAll(".link")[0];
+	var nodes = svg.selectAll(".node")[0];
+	var links = svg.selectAll(".link")[0];
 	
 	packer
 		.nodes(nodes)
@@ -177,7 +179,7 @@ function updateGraph() {
 		    packer.links().forEach(function(node) {
 		    	d3.select(link)
 		    		.attr("d", path);
-		    })
+		    });
 		})
 		.start();
 }
